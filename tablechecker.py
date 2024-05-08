@@ -9,7 +9,7 @@ test_folder = 'test'
 
 table_settings = {
     "vertical_strategy": "lines",
-    "horizontal_strategy": "lines",
+    "horizontal_strategy": "text", #lines
     "snap_y_tolerance": 5,
     "intersection_x_tolerance": 15
 }
@@ -24,11 +24,24 @@ def utstyrsteller():
                     page_counter = 1
                     for page in pdf.pages: #Looper gjennom sidene i pdf'en.
 
-                        im = page.to_image()
+                        width = page.width
+                        height = page.height
+                        # Skaffer coordinatene i hjørnet
+                        x0 = width * 0.70
+                        y0 = 0
+                        x1 = width
+                        y1 = height
+
+                        bbox = (x0,y0,x1,y1)
+
+                        cropped_page = page.crop(bbox)
+
+
+                        im = cropped_page.to_image()
                         pikk = im.reset().debug_tablefinder(table_settings)
                         image_path = os.path.join(root)
                         pikk.save('C:\\Users\\haakon.granheim\\PycharmProjects\\MTO_sammenlignef\\test\\wolla.jpg')
-                        print("shit saved")
+                        print("Debug image saved to ")
 
                         """https://github.com/jsvine/pdfplumber/blob/stable/examples/notebooks/extract-table-nics.ipynb"""
 

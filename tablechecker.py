@@ -1,19 +1,27 @@
 import pdfplumber
-import re
 import os
 import pandas as pd
 from collections import defaultdict
 
+#Viktig å endre excel_path!!#
 
 test_folder = 'check_folder'
-excel_path = 'check_folder/NVO-AE1-30-MU-003-0_04E_E1 - VBA. Mengdeliste UTJ pumpestasjon område 336.xlsx'
+excel_path = 'check_folder/NVO-AE1-30-MU-005-0_03E_E1 - VBA. Mengdeliste MOD samlestokker fra SPV-basseng.xls'
 
 table_settings = {
     "vertical_strategy": "lines",
     "horizontal_strategy": "lines", #lines
-    "snap_y_tolerance": 7,
+    "snap_y_tolerance": 8, #var tidligere 7
     "intersection_x_tolerance": 10,
 }
+
+
+
+def normaliserer_beskrivelser(description):
+    """
+    Normaliserer og rengjør beskrivelsene....en stor kilde til feil
+    """
+    return str(description).replace('\n', ' ').replace('\t', ' ').strip().upper()
 
 """Adderer opp alle antall på den varartiklen jeg definerer."""
 def utstyrsteller():
@@ -29,26 +37,21 @@ def utstyrsteller():
                         # Get dimensions of the page
                         width = page.width
                         height = page.height
+
                         # Skaffer coordinatene i hjørnet
-                        x0 = width * 0.70
+                        crop_margin = 28.35 * 5.5
+                        x0 = width * 0.740
                         y0 = 0
-                        x1 = width
+                        x1 = width - crop_margin
                         y1 = height * 0.30
 
                         bbox = (x0,y0,x1,y1)
 
+                        #Cropper shitten
                         cropped_page = page.crop(bbox)
                         p0 = cropped_page
 
-                        """
-                        #Debbug for å finne hva slags rader og kolonner den finner.
-                        im = p0.to_image()
-                        im = im.reset().debug_tablefinder(table_settings)
-                        image_path = os.path.join(root)
-                        im.save('C:\\Users\\haakon.granheim\\PycharmProjects\\MTO_sammenlignef\\test\\Debug.jpg')
-                        print(f"Debug image saved to {test_folder}")
-                        """
-
+                        #henter tabellen
                         tables = p0.extract_tables(table_settings)
                         for table in tables:
                             for row in table:
@@ -56,7 +59,7 @@ def utstyrsteller():
                                     continue
 
                                 mengde = row[1]
-                                beskrivelse = row[4]
+                                beskrivelse = row[-1] #enten 3 eller 4
 
                                 if str.lower('KAPPLISTE') in str.lower(row[0]):
                                     break
@@ -77,7 +80,7 @@ def utstyrsteller():
 
                                 # Accumulate quantity for the description. 'Beskrivelse' er Key
                                 if beskrivelse:
-                                    rengjort_beskrivelse = beskrivelse.replace('\n',' ').strip()
+                                    rengjort_beskrivelse = normaliserer_beskrivelser(beskrivelse)
                                     article_totals[rengjort_beskrivelse] += antall_type
 
 
@@ -87,8 +90,7 @@ def utstyrsteller():
 
     return article_totals
 
-
-def compare_with_excel(article_totals):
+def compare_with_excel(article_totals, tolerance= 1e-6):
     # Load the Excel file
     for (root, dirs, files) in os.walk('check_folder'):
         for file in files:
@@ -96,13 +98,13 @@ def compare_with_excel(article_totals):
                 print(f"Sammenligner med excelfil {file}")
                 df = pd.read_excel(excel_path, sheet_name='Innhold', skiprows=6)
 
-
                 # For excel kolonnene 'Beskrivelse' og 'Mengde'
                 forskjeller = []
+
                 for index, row in df.iterrows():
                     if pd.isna(row['Beskrivelse']):
                         continue
-                    description = str(row['Beskrivelse']).replace('\n',' ').strip().upper()
+                    description = normaliserer_beskrivelser(row['Beskrivelse'])
 
                     if pd.isna(row['Mengde']):
                         excel_quantity = 0.0
@@ -121,8 +123,10 @@ def compare_with_excel(article_totals):
                             'PDF mengde': pdf_quantity
                         })
 
-                excel_descriptions = df['Beskrivelse'].dropna().str.replace('\n', ' ').str.strip().str.upper().tolist()
+                #List of descriptions from Excel
+                excel_descriptions = df['Beskrivelse'].dropna().apply(normaliserer_beskrivelser).tolist()
 
+                #Check for items in PDFs but not in excel
                 for description in article_totals.keys():
                     if description not in excel_descriptions:
                         forskjeller.append({
@@ -140,8 +144,45 @@ def compare_with_excel(article_totals):
                     print("Ingen forskjeller funnet. Mengden matcher.")
 
 
-# Kalle funksjonene
+def debug():
+    for (root, dirs, files) in os.walk(test_folder):
+        for file in files:
+            if str(file).endswith('pdf'):  # Sjekker at filen er en .pdf før jeg åpner den.
+                print(f"ISO-Tegning: {file}")
+                with pdfplumber.open(os.path.join(test_folder, file)) as pdf:  # Åpner PDF-en.
+                    page_counter = 1
+                    for page in pdf.pages:  # Looper gjennom sidene i pdf'en
+
+                        # Get dimensions of the page
+                        width = page.width
+                        height = page.height
+                        # Skaffer coordinatene i hjørnet
+
+                        crop_margin = 28.35 * 5.5
+                        x0 = width * 0.740
+                        y0 = 0
+                        x1 = width - crop_margin
+                        y1 = height * 0.30
+
+                        bbox = (x0, y0, x1, y1)
+
+                        cropped_page = page.crop(bbox)
+                        p0 = cropped_page
+
+                        # Debbug for å finne hva slags rader og kolonner den finner.
+                        im = p0.to_image()
+                        im = im.reset().debug_tablefinder(table_settings)
+                        image_path = os.path.join(root)
+                        im.save(f'C:\\Users\\haakon.granheim\\PycharmProjects\\MTO_sammenlignef\\debug\\{file[:20]}_debug.jpg')
+                        print(f"Debug image saved to debug folder")
+
+
+# Kaller funksjonene
 article_totals = utstyrsteller()
 compare_with_excel(article_totals)
+
+
+"""Debug om jeg skulle trenge det. Sjekker hvordan scripted leser pdf-filene"""
+#debug()
 
 

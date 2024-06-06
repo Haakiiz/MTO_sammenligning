@@ -39,7 +39,8 @@ def utstyrsteller():
                         cropped_page = page.crop(bbox)
                         p0 = cropped_page
 
-                        """Debbug for å finne hva slags rader og kolonner den finner."""
+
+                        #Debbug for å finne hva slags rader og kolonner den finner.
                         im = p0.to_image()
                         im = im.reset().debug_tablefinder(table_settings)
                         image_path = os.path.join(root)
@@ -53,30 +54,34 @@ def utstyrsteller():
                                 if not row or not row[0]:
                                     continue
 
-                                antall = row[1]
+                                mengde = row[1]
                                 beskrivelse = row[4]
 
-                                # Check if 'antall' is a valid number
-                                if antall and 'M' in antall:
+                                if str.lower('KAPPLISTE') in str.lower(row[0]):
+                                    break
+
+                                # Check if 'mengde' is a valid number
+                                if mengde and 'M' in mengde:
                                     try:
-                                        antall_meters = float(antall.replace('M', '').replace(',', '.'))
+                                        antall_type = float(mengde.replace('M', '').replace(',', '.'))
                                     except ValueError:
                                         continue
-                                elif antall:
+                                elif mengde:
                                     try:
-                                        antall_meters = float(antall.replace(',', '.'))
+                                        antall_type = float(mengde.replace(',', '.'))
                                     except ValueError:
                                         continue
                                 else:
-                                    antall_meters = 0.0
+                                    antall_type = 0.0
 
                                 # Accumulate quantity for the description
                                 if beskrivelse:
-                                    article_totals[beskrivelse] += antall_meters
+                                    article_totals[beskrivelse] += antall_type
 
-                            # Print the summarized results
-                            for article, total in article_totals.items():
-                                print(f"Total meters of {article}: {total}M")
+                # Print the summarized results
+                for article, total in article_totals.items():
+                    print(f"Antall av ---{article}---: {total}")
+
 
 
 utstyrsteller()

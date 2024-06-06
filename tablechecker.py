@@ -2,7 +2,11 @@ import pdfplumber
 import os
 import pandas as pd
 from collections import defaultdict
+import tabulate as tabulate
 
+###Viktige ting det er viktig å endre på:
+    #Excel filnavn i excel_path, og sjekk om det er .xls eller .xlsx
+    #sjekk skiprows= stemmer hvor man åpner excelfila i compare funksjonen
 #Viktig å endre excel_path!!#
 
 test_folder = 'check_folder'
@@ -90,11 +94,12 @@ def utstyrsteller():
 
     return article_totals
 
-def compare_with_excel(article_totals, tolerance= 1e-6):
+def compare_with_excel(article_totals, output_excel_path = 'forskjellsrapport.xlsx'):
+    all_differences = []
     # Load the Excel file
     for (root, dirs, files) in os.walk('check_folder'):
         for file in files:
-            if str(file).endswith('.xlsx'): #Sjekker at filen er excel før jeg åpner den.
+            if str(file).endswith('.xls'): #Sjekker at filen er excel før jeg åpner den.
                 print(f"Sammenligner med excelfil {file}")
                 df = pd.read_excel(excel_path, sheet_name='Innhold', skiprows=6)
 
@@ -131,17 +136,30 @@ def compare_with_excel(article_totals, tolerance= 1e-6):
                     if description not in excel_descriptions:
                         forskjeller.append({
                             'Kilde': 'PDF',
-                            'Description': description,
+                            'Beskrivelse': description,
                             'Excel mengde': 0.0,
                             'PDF mengde': article_totals[description]
                         })
 
+                all_differences.extend(forskjeller)
+
                 if forskjeller:
                     print("Forskjeller funnet:")
-                    for forskjell in forskjeller:
-                        print(forskjell)
+                    table = [
+                        [diff['Kilde'], diff['Beskrivelse'], diff['Excel mengde'], diff['PDF mengde']]
+                        for diff in forskjeller
+                    ]
+                    print(tabulate.tabulate(table, headers=["Kilde", "Beskrivelse", "Excel Mengde", "PDF Mengde"]))
                 else:
                     print("Ingen forskjeller funnet. Mengden matcher.")
+
+    # Save differences to an Excel file
+    if all_differences:
+        df_differences = pd.DataFrame(all_differences)
+        df_differences.to_excel(output_excel_path, index=False)
+        print(f"Differences saved to {output_excel_path}")
+    else:
+        print("Ingen forskjeller funnet. Mengden matcher.")
 
 
 def debug():

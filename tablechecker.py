@@ -5,8 +5,8 @@ import pandas as pd
 from collections import defaultdict
 
 
-test_folder = 'test'
-excel_path = 'test/NVO-AE1-313-MU-003-0_01E_E1 - VBA. Mengdeliste Rejektvann sentrifuger AVV.xls'
+test_folder = 'check_folder'
+excel_path = 'check_folder/NVO-AE1-30-MU-003-0_04E_E1 - VBA. Mengdeliste UTJ pumpestasjon område 336.xlsx'
 
 table_settings = {
     "vertical_strategy": "lines",
@@ -18,7 +18,7 @@ table_settings = {
 """Adderer opp alle antall på den varartiklen jeg definerer."""
 def utstyrsteller():
     article_totals = defaultdict(float)
-    for (root, dirs, files) in os.walk('test'):
+    for (root, dirs, files) in os.walk(test_folder):
         for file in files:
             if str(file).endswith('pdf'): #Sjekker at filen er en .pdf før jeg åpner den.
                 print(f"ISO-Tegning: {file}")
@@ -90,11 +90,11 @@ def utstyrsteller():
 
 def compare_with_excel(article_totals):
     # Load the Excel file
-    for (root, dirs, files) in os.walk('test'):
+    for (root, dirs, files) in os.walk('check_folder'):
         for file in files:
-            if str(file).endswith('xls'): #Sjekker at filen er en .pdf før jeg åpner den.
+            if str(file).endswith('.xlsx'): #Sjekker at filen er excel før jeg åpner den.
                 print(f"Sammenligner med excelfil {file}")
-                df = pd.read_excel(excel_path, sheet_name='Innhold', skiprows=4)
+                df = pd.read_excel(excel_path, sheet_name='Innhold', skiprows=6)
 
 
                 # For excel kolonnene 'Beskrivelse' og 'Mengde'
@@ -115,9 +115,21 @@ def compare_with_excel(article_totals):
                     # Compare the quantities
                     if pdf_quantity != excel_quantity:
                         forskjeller.append({
+                            'Kilde': 'Excel',
                             'Beskrivelse': description,
                             'Excel mengde': excel_quantity,
                             'PDF mengde': pdf_quantity
+                        })
+
+                excel_descriptions = df['Beskrivelse'].dropna().str.replace('\n', ' ').str.strip().str.upper().tolist()
+
+                for description in article_totals.keys():
+                    if description not in excel_descriptions:
+                        forskjeller.append({
+                            'Kilde': 'PDF',
+                            'Description': description,
+                            'Excel mengde': 0.0,
+                            'PDF mengde': article_totals[description]
                         })
 
                 if forskjeller:

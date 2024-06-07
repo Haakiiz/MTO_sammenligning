@@ -7,10 +7,15 @@ import tabulate as tabulate
 ###Viktige ting det er viktig å endre på:
     #Excel filnavn i excel_path, og sjekk om det er .xls eller .xlsx
     #sjekk skiprows= stemmer hvor man åpner excelfila i compare funksjonen
-#Viktig å endre excel_path!!#
+    #endre .endswith i compare funksjonen
 
 test_folder = 'check_folder'
-excel_path = 'check_folder/NVO-AE1-30-MU-005-0_03E_E1 - VBA. Mengdeliste MOD samlestokker fra SPV-basseng.xls'
+
+"""Disse må endres på før du kjører scriptet"""
+excel_path = 'check_folder/NVO-AE1-337-MU-001-0_01E_E1 - VBA. Mengdeliste 207 i 337 sjakt fram til grensesnitt mot VA i ventilasjonstårn.xls'
+skipped_rows = 6
+sheeeet_name = 'Sheet'
+excelending = '.xls'
 
 table_settings = {
     "vertical_strategy": "lines",
@@ -96,15 +101,14 @@ def utstyrsteller():
 
 def compare_with_excel(article_totals, output_excel_path = 'forskjellsrapport.xlsx'):
     all_differences = []
+    all_articles = []
     # Load the Excel file
     for (root, dirs, files) in os.walk('check_folder'):
         for file in files:
-            if str(file).endswith('.xls'): #Sjekker at filen er excel før jeg åpner den.
+            if str(file).endswith(excelending): #Sjekker at filen er excel før jeg åpner den.
                 print(f"Sammenligner med excelfil {file}")
-                df = pd.read_excel(excel_path, sheet_name='Innhold', skiprows=6)
+                df = pd.read_excel(excel_path, sheet_name=sheeeet_name, skiprows=skipped_rows)
 
-                # For excel kolonnene 'Beskrivelse' og 'Mengde'
-                forskjeller = []
 
                 for index, row in df.iterrows():
                     if pd.isna(row['Beskrivelse']):
@@ -119,9 +123,16 @@ def compare_with_excel(article_totals, output_excel_path = 'forskjellsrapport.xl
                     # Get the quantity from the article_totals dictionary
                     pdf_quantity = article_totals.get(description, 0)
 
+                    all_articles.append({
+                        'Kilde': 'Excel',
+                        'Beskrivelse': description,
+                        'Excel mengde': excel_quantity,
+                        'PDF mengde': pdf_quantity
+                    })
+
                     # Compare the quantities
                     if pdf_quantity != excel_quantity:
-                        forskjeller.append({
+                        all_differences.append({
                             'Kilde': 'Excel',
                             'Beskrivelse': description,
                             'Excel mengde': excel_quantity,
@@ -131,35 +142,34 @@ def compare_with_excel(article_totals, output_excel_path = 'forskjellsrapport.xl
                 #List of descriptions from Excel
                 excel_descriptions = df['Beskrivelse'].dropna().apply(normaliserer_beskrivelser).tolist()
 
-                #Check for items in PDFs but not in excel
+                # Check for items in PDFs but not in Excel
                 for description in article_totals.keys():
                     if description not in excel_descriptions:
-                        forskjeller.append({
+                        all_articles.append({
                             'Kilde': 'PDF',
                             'Beskrivelse': description,
                             'Excel mengde': 0.0,
                             'PDF mengde': article_totals[description]
                         })
 
-                all_differences.extend(forskjeller)
+                        all_differences.append({
+                            'Kilde': 'PDF',
+                            'Beskrivelse': description,
+                            'Excel mengde': 0.0,
+                            'PDF mengde': article_totals[description]
+                        })
 
-                if forskjeller:
-                    print("Forskjeller funnet:")
-                    table = [
-                        [diff['Kilde'], diff['Beskrivelse'], diff['Excel mengde'], diff['PDF mengde']]
-                        for diff in forskjeller
-                    ]
-                    print(tabulate.tabulate(table, headers=["Kilde", "Beskrivelse", "Excel Mengde", "PDF Mengde"]))
-                else:
-                    print("Ingen forskjeller funnet. Mengden matcher.")
+    if all_articles:
+        print("Alle artikler:")
+        table = [
+            [article['Kilde'], article['Beskrivelse'], article['Excel mengde'], article['PDF mengde']]
+            for article in all_articles
+        ]
+        print(tabulate.tabulate(table, headers=["Kilde", "Beskrivelse", "Excel Mengde", "PDF Mengde"]))
 
-    # Save differences to an Excel file
-    if all_differences:
-        df_differences = pd.DataFrame(all_differences)
-        df_differences.to_excel(output_excel_path, index=False)
-        print(f"Differences saved to {output_excel_path}")
-    else:
-        print("Ingen forskjeller funnet. Mengden matcher.")
+        df_artikler = pd.DataFrame(all_articles)
+        df_artikler.to_excel(output_excel_path, index=False)
+        print(f"Artikler lagret på {output_excel_path}")
 
 
 def debug():

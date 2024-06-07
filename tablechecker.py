@@ -12,9 +12,9 @@ import tabulate as tabulate
 test_folder = 'check_folder'
 
 """Disse må endres på før du kjører scriptet"""
-excel_path = 'check_folder/NVO-AE1-337-MU-001-0_01E_E1 - VBA. Mengdeliste 207 i 337 sjakt fram til grensesnitt mot VA i ventilasjonstårn.xls'
-skipped_rows = 6
-sheeeet_name = 'Sheet'
+excel_path = 'check_folder/NVO-AE1-344-MU-006-0_01E_E1 - VBA. Mengdeliste Modningsvann L1 - Vest og senter.xls anvi'
+skipped_rows = 4
+sheeeet_name = 'Innhold'
 excelending = '.xls'
 
 table_settings = {
@@ -32,9 +32,17 @@ def normaliserer_beskrivelser(description):
     """
     return str(description).replace('\n', ' ').replace('\t', ' ').strip().upper()
 
+def format_iso_quantities(iso_files):
+    """
+    Format the quantities from different ISO files into a single string with line breaks.
+    """
+    formatted = "\n".join([f"{qty} fra {iso[:20]}..." for iso, qty in iso_files.items()])
+    return formatted
+
+
 """Adderer opp alle antall på den varartiklen jeg definerer."""
 def utstyrsteller():
-    article_totals = defaultdict(float)
+    article_totals = defaultdict(lambda:defaultdict(float))
     for (root, dirs, files) in os.walk(test_folder):
         for file in files:
             if str(file).endswith('pdf'): #Sjekker at filen er en .pdf før jeg åpner den.
@@ -90,7 +98,7 @@ def utstyrsteller():
                                 # Accumulate quantity for the description. 'Beskrivelse' er Key
                                 if beskrivelse:
                                     rengjort_beskrivelse = normaliserer_beskrivelser(beskrivelse)
-                                    article_totals[rengjort_beskrivelse] += antall_type
+                                    article_totals[rengjort_beskrivelse][file] += antall_type
 
 
                             # Print the summarized results
@@ -99,16 +107,18 @@ def utstyrsteller():
 
     return article_totals
 
-def compare_with_excel(article_totals, output_excel_path = 'forskjellsrapport.xlsx'):
+def compare_with_excel(article_totals, output_excel_path='forskjellsrapport.xlsx'):
+    """
+    Sammenligner PDF-data med Excel-data og lagrer resultatene i en Excel-fil.
+    """
     all_differences = []
     all_articles = []
     # Load the Excel file
     for (root, dirs, files) in os.walk('check_folder'):
         for file in files:
-            if str(file).endswith(excelending): #Sjekker at filen er excel før jeg åpner den.
+            if str(file).endswith(excelending):  # Sjekker at filen er excel før jeg åpner den.
                 print(f"Sammenligner med excelfil {file}")
                 df = pd.read_excel(excel_path, sheet_name=sheeeet_name, skiprows=skipped_rows)
-
 
                 for index, row in df.iterrows():
                     if pd.isna(row['Beskrivelse']):
@@ -121,55 +131,75 @@ def compare_with_excel(article_totals, output_excel_path = 'forskjellsrapport.xl
                         excel_quantity = row['Mengde']
 
                     # Get the quantity from the article_totals dictionary
-                    pdf_quantity = article_totals.get(description, 0)
+                    pdf_quantities = article_totals.get(description, {})
+
+                    formatted_iso_quantities = format_iso_quantities(pdf_quantities)
+
+                    total_pdf_quantity = sum(pdf_quantities.values())
 
                     all_articles.append({
                         'Kilde': 'Excel',
                         'Beskrivelse': description,
-                        'Excel mengde': excel_quantity,
-                        'PDF mengde': pdf_quantity
+                        'Excel mengde [mm]': excel_quantity,
+                        'PDF mengde [m]': total_pdf_quantity,
+                        "ISO fil": formatted_iso_quantities
                     })
 
                     # Compare the quantities
-                    if pdf_quantity != excel_quantity:
+                    if total_pdf_quantity != excel_quantity:
                         all_differences.append({
                             'Kilde': 'Excel',
                             'Beskrivelse': description,
-                            'Excel mengde': excel_quantity,
-                            'PDF mengde': pdf_quantity
+                            'Excel mengde [mm]': excel_quantity,
+                            'PDF mengde [m]': total_pdf_quantity,
+                            "ISO fil": formatted_iso_quantities
                         })
 
-                #List of descriptions from Excel
+                # List of descriptions from Excel
                 excel_descriptions = df['Beskrivelse'].dropna().apply(normaliserer_beskrivelser).tolist()
 
                 # Check for items in PDFs but not in Excel
-                for description in article_totals.keys():
+                for description, iso_files in article_totals.items():
                     if description not in excel_descriptions:
+                        formatted_iso_quantities = format_iso_quantities(iso_files)
+                        total_pdf_quantity = sum(iso_files.values())
                         all_articles.append({
                             'Kilde': 'PDF',
                             'Beskrivelse': description,
-                            'Excel mengde': 0.0,
-                            'PDF mengde': article_totals[description]
+                            'Excel mengde [mm]': 0.0,
+                            'PDF mengde [m]': total_pdf_quantity,
+                            'ISO fil': formatted_iso_quantities
                         })
 
                         all_differences.append({
                             'Kilde': 'PDF',
                             'Beskrivelse': description,
-                            'Excel mengde': 0.0,
-                            'PDF mengde': article_totals[description]
+                            'Excel mengde [mm]': 0.0,
+                            'PDF mengde [m]': total_pdf_quantity,
+                            'ISO fil': formatted_iso_quantities
                         })
 
     if all_articles:
         print("Alle artikler:")
         table = [
-            [article['Kilde'], article['Beskrivelse'], article['Excel mengde'], article['PDF mengde']]
+            [article['Kilde'], article['Beskrivelse'], article['Excel mengde [mm]'], article['PDF mengde [m]']]
             for article in all_articles
         ]
-        print(tabulate.tabulate(table, headers=["Kilde", "Beskrivelse", "Excel Mengde", "PDF Mengde"]))
+        print(tabulate.tabulate(table, headers=["Kilde", "Beskrivelse", "Excel Mengde [mm]", "PDF Mengde [m]"]))
 
         df_artikler = pd.DataFrame(all_articles)
         df_artikler.to_excel(output_excel_path, index=False)
         print(f"Artikler lagret på {output_excel_path}")
+
+
+
+
+# Kaller funksjonene
+article_totals = utstyrsteller()
+compare_with_excel(article_totals)
+
+
+"""Debug om jeg skulle trenge det. Sjekker hvordan scripted leser pdf-filene"""
 
 
 def debug():
@@ -203,14 +233,4 @@ def debug():
                         image_path = os.path.join(root)
                         im.save(f'C:\\Users\\haakon.granheim\\PycharmProjects\\MTO_sammenlignef\\debug\\{file[:20]}_debug.jpg')
                         print(f"Debug image saved to debug folder")
-
-
-# Kaller funksjonene
-article_totals = utstyrsteller()
-compare_with_excel(article_totals)
-
-
-"""Debug om jeg skulle trenge det. Sjekker hvordan scripted leser pdf-filene"""
 #debug()
-
-

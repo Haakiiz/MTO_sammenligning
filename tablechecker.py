@@ -24,6 +24,8 @@ table_settings = {
     "intersection_x_tolerance": 10,
 }
 
+def remove_none_types(x):
+    [item for item in x if item is not None]
 
 
 def normaliserer_beskrivelser(description):
@@ -39,6 +41,17 @@ def format_iso_quantities(iso_files):
     formatted = "\n".join([f"{qty} fra {iso[:20]}..." for iso, qty in iso_files.items()])
     return formatted
 
+def flatten_row(row):
+    """
+    Flattens a nested list into a single list.
+    """
+    flat_row = []
+    for item in row:
+        if isinstance(item, list):
+            flat_row.extend(item)
+        else:
+            flat_row.append(item)
+    return flat_row
 
 """Adderer opp alle antall på den varartiklen jeg definerer."""
 def utstyrsteller():
@@ -48,8 +61,8 @@ def utstyrsteller():
             if str(file).endswith('pdf'): #Sjekker at filen er en .pdf før jeg åpner den.
                 print(f"ISO-Tegning: {file}")
                 with pdfplumber.open(os.path.join(test_folder, file)) as pdf:  # Åpner PDF-en.
-                    page_counter = 1
                     for page in pdf.pages: #Looper gjennom sidene i pdf'en
+                        expected_id = 1
 
                         # Get dimensions of the page
                         width = page.width
@@ -74,6 +87,21 @@ def utstyrsteller():
                             for row in table:
                                 if not row or not row[0]: #var på 0
                                     continue
+
+                                #row = flatten_row(row)
+
+                                #Teller og går gjennom ID, at de kommer etterhverandre
+                                try:
+                                    current_id = int(row[0])
+                                except ValueError:
+                                    continue
+
+                                if current_id != expected_id:
+                                    print(f"Expected ID {expected_id} but found {current_id}. Skipping row: {row}")
+                                    continue
+
+                                expected_id += 1
+
 
                                 mengde = row[1]
                                 beskrivelse = row[-1] #enten 3 eller 4

@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="95613726-f151-45bc-ba7f-7343df9c1933" name="Changes" comment="4 push:&#10;ISO-delen fungerer!! Klarer å lese gjennom alle og lage dict og summarize!">
+    <list default="true" id="95613726-f151-45bc-ba7f-7343df9c1933" name="Changes" comment="12. push:&#10;Før vi bytter til endring med at vi sjekker ID match.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tablechecker.py" beforeDir="false" afterPath="$PROJECT_DIR$/tablechecker.py" afterDir="false" />
     </list>
@@ -35,6 +35,9 @@
     &quot;accountId&quot;: &quot;a4b96d16-feed-43b5-bb97-c4e65084b71c&quot;
   }
 }</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
 }</component>
@@ -46,9 +49,10 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python tests.Doctests in common.executor": "Run",
     "Python._optional.executor": "Debug",
     "Python.managers.executor": "Debug",
-    "Python.tablechecker.executor": "Debug",
+    "Python.tablechecker.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
     "last_opened_file_path": "C:/Users/haakon.granheim/PycharmProjects/MTO_sammenlignef"
@@ -98,7 +102,21 @@
       <option name="presentableId" value="LOCAL−00004" />
       <updated>1717661319051</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL−00005" summary="11. push:&#10;Har sånn at man ser ISO greier. Men fungerer bra.">
+      <option name="closed" value="true" />
+      <created>1717763379622</created>
+      <option name="number" value="LOCAL−00005" />
+      <option name="presentableId" value="LOCAL−00005" />
+      <updated>1717763379622</updated>
+    </task>
+    <task id="LOCAL−00006" summary="12. push:&#10;Før vi bytter til endring med at vi sjekker ID match.">
+      <option name="closed" value="true" />
+      <created>1718017204050</created>
+      <option name="number" value="LOCAL−00006" />
+      <option name="presentableId" value="LOCAL−00006" />
+      <updated>1718017204050</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -116,17 +134,18 @@
     <MESSAGE value="2nd push" />
     <MESSAGE value="3rd push:&#10;-klarer å lese tabell i PDF riktig.&#10;-laget en deafaultdict som samler alle artikler." />
     <MESSAGE value="4 push:&#10;ISO-delen fungerer!! Klarer å lese gjennom alle og lage dict og summarize!" />
-    <option name="LAST_COMMIT_MESSAGE" value="4 push:&#10;ISO-delen fungerer!! Klarer å lese gjennom alle og lage dict og summarize!" />
+    <MESSAGE value="11. push:&#10;Har sånn at man ser ISO greier. Men fungerer bra." />
+    <MESSAGE value="12. push:&#10;Før vi bytter til endring med at vi sjekker ID match." />
+    <option name="LAST_COMMIT_MESSAGE" value="12. push:&#10;Før vi bytter til endring med at vi sjekker ID match." />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/tablechecker.py</url>
-          <line>95</line>
-          <option name="timeStamp" value="5" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="tables" />
+        <watch expression="tables[4]" />
+        <watch expression="tables" />
+        <watch expression="tables" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>

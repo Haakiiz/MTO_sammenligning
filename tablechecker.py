@@ -12,9 +12,9 @@ import tabulate as tabulate
 test_folder = 'check_folder'
 
 """Disse må endres på før du kjører scriptet"""
-excel_path = 'check_folder/NVO-AE1-344-MU-006-0_01E_E1 - VBA. Mengdeliste Modningsvann L1 - Vest og senter.xls anvi'
-skipped_rows = 4
-sheeeet_name = 'Innhold'
+excel_path = 'check_folder/NVO-AE1-30-MU-002-0_03E_E1 - VBA. Mengdeliste Slamlager (SLL).xls'
+skipped_rows = 6
+sheeeet_name = 'Sheet1_A3'
 excelending = '.xls'
 
 table_settings = {
@@ -72,13 +72,13 @@ def utstyrsteller():
                         tables = p0.extract_tables(table_settings)
                         for table in tables:
                             for row in table:
-                                if not row or not row[0]:
+                                if not row or not row[0]: #var på 0
                                     continue
 
                                 mengde = row[1]
                                 beskrivelse = row[-1] #enten 3 eller 4
 
-                                if str.lower('KAPPLISTE') in str.lower(row[0]):
+                                if str.lower('KAPPLISTE') in str.lower(row[0]): #var før 0
                                     break
 
                                 # Check if 'mengde' is a valid number
@@ -98,7 +98,7 @@ def utstyrsteller():
                                 # Accumulate quantity for the description. 'Beskrivelse' er Key
                                 if beskrivelse:
                                     rengjort_beskrivelse = normaliserer_beskrivelser(beskrivelse)
-                                    article_totals[rengjort_beskrivelse][file] += antall_type
+                                    article_totals[rengjort_beskrivelse][file[:20]] += antall_type
 
 
                             # Print the summarized results
@@ -195,8 +195,9 @@ def compare_with_excel(article_totals, output_excel_path='forskjellsrapport.xlsx
 
 
 # Kaller funksjonene
-article_totals = utstyrsteller()
-compare_with_excel(article_totals)
+utstyrsteller()
+#article_totals = utstyrsteller()
+#compare_with_excel(article_totals)
 
 
 """Debug om jeg skulle trenge det. Sjekker hvordan scripted leser pdf-filene"""
@@ -233,4 +234,5 @@ def debug():
                         image_path = os.path.join(root)
                         im.save(f'C:\\Users\\haakon.granheim\\PycharmProjects\\MTO_sammenlignef\\debug\\{file[:20]}_debug.jpg')
                         print(f"Debug image saved to debug folder")
+
 #debug()

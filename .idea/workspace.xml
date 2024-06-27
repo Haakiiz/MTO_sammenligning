@@ -47,17 +47,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python tests.Doctests in common.executor": "Run",
-    "Python._optional.executor": "Debug",
-    "Python.managers.executor": "Debug",
-    "Python.tablechecker.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "C:/Users/haakon.granheim/PycharmProjects/MTO_sammenlignef"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python tests.Doctests in common.executor&quot;: &quot;Run&quot;,
+    &quot;Python._optional.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.managers.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.tablechecker.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/haakon.granheim/PycharmProjects/MTO_sammenlignef&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -116,7 +116,14 @@
       <option name="presentableId" value="LOCAL−00006" />
       <updated>1718017204050</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL−00007" summary="12. push:&#10;Før vi bytter til endring med at vi sjekker ID match.">
+      <option name="closed" value="true" />
+      <created>1718028162932</created>
+      <option name="number" value="LOCAL−00007" />
+      <option name="presentableId" value="LOCAL−00007" />
+      <updated>1718028162932</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

@@ -12,9 +12,9 @@ import tabulate as tabulate
 test_folder = 'check_folder'
 
 """Disse må endres på før du kjører scriptet"""
-excel_path = 'check_folder/NVO-AE1-30-MU-002-0_03E_E1 - VBA. Mengdeliste Slamlager (SLL).xls'
+excel_path = 'check_folder/NVO-AE1-354-MU-004-0_02E_E1 - VBA. Mengdeliste FIL L2 - Øst - Ikke DN1400.xls'
 skipped_rows = 6
-sheeeet_name = 'Sheet1_A3'
+sheeeet_name = 'Innhold'
 excelending = '.xls'
 
 table_settings = {
@@ -128,12 +128,33 @@ def utstyrsteller():
                                     rengjort_beskrivelse = normaliserer_beskrivelser(beskrivelse)
                                     article_totals[rengjort_beskrivelse][file[:20]] += antall_type
 
-
-                            # Print the summarized results
-        for article, total in article_totals.items():
-            print(f"Antall av ---{article}---: {total}")
-
     return article_totals
+
+
+def create_excel_report(article_totals, output_file="equipment_report.xlsx"):
+    """
+    Creates an Excel file with the description and total quantity information.
+    """
+    data = []
+    for description, quantities in article_totals.items():
+        total_quantity = sum(quantities.values())
+        data.append({"Description": description, "Total Quantity": total_quantity})
+
+    df = pd.DataFrame(data)
+    df = df.sort_values("Total Quantity", ascending=False)
+
+    with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Equipment Summary')
+
+        # Auto-adjust columns' width
+        for column in df:
+            column_width = max(df[column].astype(str).map(len).max(), len(column))
+            col_idx = df.columns.get_loc(column)
+            writer.sheets['Equipment Summary'].column_dimensions[chr(65 + col_idx)].width = column_width + 2
+
+    print(f"\nExcel report created: {output_file}")
+
+
 
 def compare_with_excel(article_totals, output_excel_path='forskjellsrapport.xlsx'):
     """
@@ -223,8 +244,9 @@ def compare_with_excel(article_totals, output_excel_path='forskjellsrapport.xlsx
 
 
 # Kaller funksjonene
-utstyrsteller()
-#article_totals = utstyrsteller()
+#utstyrsteller()
+article_totals = utstyrsteller()
+create_excel_report(article_totals)
 #compare_with_excel(article_totals)
 
 
